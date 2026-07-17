@@ -27,8 +27,11 @@ export const UserManagement = () => {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      if (!formData.name.trim() || !formData.username.trim() || !formData.password.trim()) {
-        throw new Error("Nama, username, dan password wajib diisi.");
+      if (!formData.name.trim() || !formData.username.trim() || !formData.email.trim() || !formData.password.trim()) {
+        throw new Error("Nama, username, email, dan password wajib diisi.");
+      }
+      if (formData.password.length < 8) {
+        throw new Error("Password minimal 8 karakter.");
       }
       // mahasiswa & dosen/tendik -> role user; admin/teknisi -> role admin
       const role = formData.user_type === 'admin' ? 'admin' : 'user';
@@ -201,8 +204,9 @@ export const UserManagement = () => {
                 type="text"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Min. 6 karakter"
+                placeholder="Min. 8 karakter"
                 required
+                minLength={8}
                 className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
               />
             </div>
@@ -210,15 +214,17 @@ export const UserManagement = () => {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Alamat Email Kampus (opsional)
+              Alamat Email *
             </label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="nama@polbeng.ac.id"
+              required
               className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
             />
+            <p className="text-[10px] text-slate-400 mt-1">Dipakai untuk reset password jika pengguna lupa kata sandi.</p>
           </div>
 
           <div>

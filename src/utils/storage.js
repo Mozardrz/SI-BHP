@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { hashPassword, isHashed } from './password';
 
 // ============================================================
 // SI-BHP data layer — Supabase edition.
@@ -287,6 +288,11 @@ export const saveUser = async (userData) => {
     ? `${userData.first_name || ''} ${userData.last_name || ''}`.trim()
     : (userData.name || '');
 
+  // Password selalu disimpan sebagai hash
+  if (userData.password && !isHashed(userData.password)) {
+    userData = { ...userData, password: await hashPassword(userData.password) };
+  }
+
   if (userData.id) {
     const payload = { ...userData, name: derivedName || userData.name };
     const { error } = await supabase.from('users').update(payload).eq('id', userData.id);
@@ -312,6 +318,9 @@ export const updateUserProfile = async (userId, patch) => {
   const { data: current, error: e1 } = await supabase.from('users').select('*').eq('id', userId).single();
   if (e1 || !current) throw new Error("Pengguna tidak ditemukan.");
 
+  if (patch.password && !isHashed(patch.password)) {
+    patch = { ...patch, password: await hashPassword(patch.password) };
+  }
   const merged = { ...current, ...patch };
   if (patch.first_name !== undefined || patch.last_name !== undefined) {
     merged.name = `${merged.first_name || ''} ${merged.last_name || ''}`.trim() || merged.name;

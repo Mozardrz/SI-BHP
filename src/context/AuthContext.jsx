@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase';
 import { saveUser, updateUserProfile } from '../utils/storage';
+import { verifyPassword, isHashed } from '../utils/password';
 
 const AuthContext = createContext(null);
 
@@ -53,11 +54,16 @@ export const AuthProvider = ({ children }) => {
     if (error || !matched) {
       throw new Error("Username tidak ditemukan. Silakan daftarkan akun terlebih dahulu.");
     }
-    if (matched.password && matched.password !== password) {
+    if (!(await verifyPassword(password, matched.password))) {
       throw new Error("Password yang Anda masukkan salah.");
     }
     if (!matched.is_active) {
       throw new Error("Akun ini telah dinonaktifkan oleh administrator.");
+    }
+
+    // Akun lama yang password-nya masih teks polos di-upgrade ke hash saat login berhasil
+    if (matched.password && !isHashed(matched.password)) {
+      await updateUserProfile(matched.id, { password });
     }
 
     setCurrentUser(matched);
@@ -65,13 +71,32 @@ export const AuthProvider = ({ children }) => {
     return matched;
   };
 
-  const registerNewAccount = async ({ first_name, last_name, username, password, user_type }) => {
+  // Lupa password: cocokkan username + email terdaftar, lalu set password baru.
+  const resetPasswordByEmail = async ({ username, email, newPassword }) => {
+    if ((newPassword || '').length < 8) throw new Error("Password baru minimal 8 karakter.");
+    const cleanUsername = username.trim().toLowerCase();
+    const { data: matched, error } = await supabase
+      .from('users').select('*').eq('username', cleanUsername).single();
+
+    if (error || !matched) throw new Error("Username tidak ditemukan.");
+    if (!matched.email || matched.email.trim().toLowerCase() !== email.trim().toLowerCase()) {
+      throw new Error("Email tidak cocok dengan email yang terdaftar pada akun ini.");
+    }
+    if (!matched.is_active) throw new Error("Akun ini telah dinonaktifkan oleh administrator.");
+
+    await updateUserProfile(matched.id, { password: newPassword });
+    return matched;
+  };
+
+  const registerNewAccount = async ({ first_name, last_name, username, email, password, user_type }) => {
+    if ((password || '').length < 8) throw new Error("Password minimal 8 karakter.");
     // mahasiswa & dosen/tendik adalah user biasa; admin/teknisi punya role admin.
     const role = user_type === 'admin' ? 'admin' : 'user';
     const newUser = await saveUser({
       first_name,
       last_name,
       username: username.trim().toLowerCase(),
+      email: email?.trim().toLowerCase(),
       password,
       role,
       user_type,
@@ -89,7 +114,8 @@ export const AuthProvider = ({ children }) => {
 
   const changePassword = async (oldPassword, newPassword) => {
     if (!currentUser) throw new Error("Tidak ada sesi aktif.");
-    if (currentUser.password && currentUser.password !== oldPassword) {
+    if ((newPassword || '').length < 8) throw new Error("Kata sandi baru minimal 8 karakter.");
+    if (!(await verifyPassword(oldPassword, currentUser.password))) {
       throw new Error("Kata sandi lama yang Anda masukkan salah.");
     }
     return updateProfile({ password: newPassword });
@@ -109,6 +135,7 @@ export const AuthProvider = ({ children }) => {
         toggleDarkMode,
         loginWithCredentials,
         registerNewAccount,
+        resetPasswordByEmail,
         updateProfile,
         changePassword,
         logout,

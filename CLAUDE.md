@@ -49,12 +49,15 @@ Nama-Laboratorium; TTD kiri Pemohon (Mahasiswa+NIM / Dosen tanpa NIP), TTD kanan
 
 ## Rencana Berikutnya (belum dikerjakan)
 
-1. **Supabase Auth** — ganti login username/password buatan (password masih plaintext di tabel users) dengan Supabase Auth, lalu **ketatkan RLS** (sekarang masih allow-all untuk anon).
+1. Ketatkan **RLS** bila memungkinkan (masih allow-all; login custom berbasis tabel users,
+   BUKAN Supabase Auth — keputusan user agar lupa-password tanpa infrastruktur email).
 2. Deploy ke Netlify + hubungkan repo GitHub.
 3. Uji coba (pilot) di 1 lab → rilis se-jurusan.
 4. Ide tertunda: permohonan multi-bahan (template surat mendukung 5 baris), nomor surat otomatis (di-skip atas permintaan user), hapus file mati `src/pages/Equipment.jsx`.
 
 ## Riwayat Update
+
+- 2026-07-17: **AUTH DIPERKUAT** — password di-hash (SHA-256+salt, `src/utils/password.js`; akun lama plaintext auto-upgrade saat login), registrasi wajib email, fitur **Lupa Password** (username+email cocok → set password baru, tanpa kirim email — keputusan user), password minimal 8 karakter di semua form (+notif merah), Kelola Pengguna email wajib. Tes auth lulus. Commit "Migrate data layer to Supabase" + auth di-push ke GitHub.
 
 - 2026-07-16 (larut): **MIGRASI SUPABASE SELESAI** — storage.js full async ke Supabase (semua CRUD + approval engine + audit), AuthContext login via DB (role select di login dihapus, cukup username+password), semua halaman & Navbar/Sidebar di-async-kan, widget "Mode Demo/Reset" dihapus, E2E test lulus (approve/batal/restock/hapus + audit). RLS masih allow-all (grant anon perlu dijalankan terpisah di SQL Editor — pernah gagal karena user me-rerun skrip lama yang error di create policy).
 

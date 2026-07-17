@@ -6,8 +6,8 @@ import gedungImg from '../assets/gedung.jpeg';
 import logoImg from '../assets/logo1.jpeg';
 
 export const Login = ({ onLoginSuccess }) => {
-  const { loginWithCredentials, registerNewAccount } = useAuth();
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const { loginWithCredentials, registerNewAccount, resetPasswordByEmail } = useAuth();
+  const [mode, setMode] = useState('login'); // 'login' | 'register' | 'reset'
   const [toast, setToast] = useState(null);
 
   // Login States
@@ -20,8 +20,16 @@ export const Login = ({ onLoginSuccess }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [regUsername, setRegUsername] = useState('');
+  const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regUserType, setRegUserType] = useState('mahasiswa');
+
+  // Reset Password States
+  const [resetUsername, setResetUsername] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+
+  const switchMode = (next) => { setMode(next); setError(''); };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -42,14 +50,18 @@ export const Login = ({ onLoginSuccess }) => {
     setError('');
     setSubmitting(true);
     try {
-      if (!firstName.trim() || !lastName.trim() || !regUsername.trim() || !regPassword.trim()) {
+      if (!firstName.trim() || !lastName.trim() || !regUsername.trim() || !regEmail.trim() || !regPassword.trim()) {
         throw new Error("Semua field pendaftaran wajib diisi.");
+      }
+      if (regPassword.length < 8) {
+        throw new Error("Password minimal 8 karakter.");
       }
 
       await registerNewAccount({
         first_name: firstName,
         last_name: lastName,
         username: regUsername,
+        email: regEmail,
         password: regPassword,
         user_type: regUserType
       });
@@ -63,13 +75,46 @@ export const Login = ({ onLoginSuccess }) => {
       // AUTO REDIRECT BACK TO LOGIN TAB WITH PRE-FILLED USERNAME
       setUsername(regUsername);
       setPassword('');
-      setIsRegisterMode(false);
+      setMode('login');
 
       // Reset reg form
       setFirstName('');
       setLastName('');
       setRegUsername('');
+      setRegEmail('');
       setRegPassword('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      if (!resetUsername.trim() || !resetEmail.trim() || !resetNewPassword.trim()) {
+        throw new Error("Semua field wajib diisi.");
+      }
+      if (resetNewPassword.length < 8) {
+        throw new Error("Password baru minimal 8 karakter.");
+      }
+
+      await resetPasswordByEmail({
+        username: resetUsername,
+        email: resetEmail,
+        newPassword: resetNewPassword
+      });
+
+      setToast({ type: 'success', message: 'Password berhasil di-reset! Silakan masuk dengan password baru Anda.' });
+      setUsername(resetUsername);
+      setPassword('');
+      setMode('login');
+      setResetUsername('');
+      setResetEmail('');
+      setResetNewPassword('');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -112,9 +157,9 @@ export const Login = ({ onLoginSuccess }) => {
             <div className="flex bg-slate-100 p-1 rounded-2xl">
               <button
                 type="button"
-                onClick={() => { setIsRegisterMode(false); setError(''); }}
+                onClick={() => switchMode('login')}
                 className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-                  !isRegisterMode
+                  mode !== 'register'
                     ? 'bg-white text-polbeng-blue shadow-sm'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
@@ -123,9 +168,9 @@ export const Login = ({ onLoginSuccess }) => {
               </button>
               <button
                 type="button"
-                onClick={() => { setIsRegisterMode(true); setError(''); }}
+                onClick={() => switchMode('register')}
                 className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-                  isRegisterMode
+                  mode === 'register'
                     ? 'bg-white text-teal-600 shadow-sm'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
@@ -136,11 +181,13 @@ export const Login = ({ onLoginSuccess }) => {
 
             <div className="space-y-1">
               <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-                {isRegisterMode ? 'Registrasi Pengguna Baru' : 'Masuk ke Sistem SI-BHP'}
+                {mode === 'register' ? 'Registrasi Pengguna Baru' : mode === 'reset' ? 'Reset Password' : 'Masuk ke Sistem SI-BHP'}
               </h2>
               <p className="text-xs text-slate-500">
-                {isRegisterMode
-                  ? 'Isi nama, username, dan password untuk mendaftar akun.'
+                {mode === 'register'
+                  ? 'Isi nama, username, email, dan password untuk mendaftar akun.'
+                  : mode === 'reset'
+                  ? 'Masukkan username dan email yang terdaftar pada akun Anda, lalu buat password baru.'
                   : 'Gunakan username dan password Anda untuk masuk ke sistem.'}
               </p>
             </div>
@@ -152,7 +199,7 @@ export const Login = ({ onLoginSuccess }) => {
               </div>
             )}
 
-            {!isRegisterMode ? (
+            {mode === 'login' ? (
               /* LOGIN FORM */
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
@@ -181,6 +228,15 @@ export const Login = ({ onLoginSuccess }) => {
                     required
                     className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
+                  <div className="text-right mt-1">
+                    <button
+                      type="button"
+                      onClick={() => switchMode('reset')}
+                      className="text-[11px] font-bold text-polbeng-blue hover:underline"
+                    >
+                      Lupa kata sandi?
+                    </button>
+                  </div>
                 </div>
 
                 <button
@@ -198,7 +254,7 @@ export const Login = ({ onLoginSuccess }) => {
                   <p className="font-mono text-slate-700">Username: <span className="font-bold">admin</span> | Password: <span className="font-bold">admin123</span></p>
                 </div>
               </form>
-            ) : (
+            ) : mode === 'register' ? (
               /* REGISTER FORM */
               <form onSubmit={handleRegister} className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -247,7 +303,22 @@ export const Login = ({ onLoginSuccess }) => {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Password *
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    placeholder="nama@email.com"
+                    required
+                    className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Dipakai untuk reset password jika Anda lupa kata sandi.</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Password * <span className="font-normal text-slate-400">(minimal 8 karakter)</span>
                   </label>
                   <input
                     type="password"
@@ -255,8 +326,12 @@ export const Login = ({ onLoginSuccess }) => {
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="••••••••"
                     required
+                    minLength={8}
                     className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
+                  {regPassword.length > 0 && regPassword.length < 8 && (
+                    <p className="text-[10px] text-rose-600 font-semibold mt-1">Password kurang dari 8 karakter ({regPassword.length}/8)</p>
+                  )}
                 </div>
 
                 <div>
@@ -281,6 +356,72 @@ export const Login = ({ onLoginSuccess }) => {
                 >
                   <UserPlus className="w-4 h-4" />
                   <span>{submitting ? 'Memproses...' : 'Daftarkan Akun'}</span>
+                </button>
+              </form>
+            ) : (
+              /* RESET PASSWORD FORM */
+              <form onSubmit={handleResetPassword} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Username *
+                  </label>
+                  <input
+                    type="text"
+                    value={resetUsername}
+                    onChange={(e) => setResetUsername(e.target.value)}
+                    placeholder="username akun Anda"
+                    required
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Email Terdaftar *
+                  </label>
+                  <input
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="email yang dipakai saat daftar"
+                    required
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Harus sama dengan email yang terdaftar pada akun ini.</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Password Baru * <span className="font-normal text-slate-400">(minimal 8 karakter)</span>
+                  </label>
+                  <input
+                    type="password"
+                    value={resetNewPassword}
+                    onChange={(e) => setResetNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    minLength={8}
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  {resetNewPassword.length > 0 && resetNewPassword.length < 8 && (
+                    <p className="text-[10px] text-rose-600 font-semibold mt-1">Password kurang dari 8 karakter ({resetNewPassword.length}/8)</p>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition-all shadow-md shadow-amber-500/20 disabled:opacity-60"
+                >
+                  <span>{submitting ? 'Memproses...' : 'Reset Password Sekarang'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => switchMode('login')}
+                  className="w-full text-[11px] font-bold text-slate-500 hover:text-slate-800 py-1"
+                >
+                  ← Kembali ke halaman masuk
                 </button>
               </form>
             )}

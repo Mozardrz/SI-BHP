@@ -61,8 +61,8 @@ export const Profile = () => {
       setToast({ type: 'error', message: 'Konfirmasi kata sandi baru tidak cocok.' });
       return;
     }
-    if (newPassword.length < 6) {
-      setToast({ type: 'error', message: 'Kata sandi baru minimal 6 karakter.' });
+    if (newPassword.length < 8) {
+      setToast({ type: 'error', message: 'Kata sandi baru minimal 8 karakter.' });
       return;
     }
     try {
