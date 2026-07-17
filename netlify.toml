@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA: semua URL diarahkan ke index.html (biar refresh halaman tidak 404)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
