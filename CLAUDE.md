@@ -57,6 +57,8 @@ Nama-Laboratorium; TTD kiri Pemohon (Mahasiswa+NIM / Dosen tanpa NIP), TTD kanan
 
 ## Riwayat Update
 
+- 2026-07-17: Kotak info "Akun Master Admin Awal" (admin/admin123) di halaman login dihapus — kredensial tidak lagi terpampang publik.
+
 - 2026-07-17: **INGAT SAYA (LOGIN)** — checkbox "Ingat saya" di form login. Dicentang: sesi permanen (seperti sebelumnya). Tidak dicentang: sesi hangus jika web ditinggalkan >5 menit (`IDLE_LIMIT_MS` di AuthContext; stempel `lastSeen` di-refresh tiap 30 dtk selama web terbuka + saat beforeunload/visibilitychange).
 
 - 2026-07-17: **HAPUS AKUN NONAKTIF** — Kelola Pengguna: tombol hapus permanen (ikon tempat sampah) muncul hanya pada akun berstatus Nonaktif; ditolak jika akun punya riwayat permohonan/transaksi (jejak audit harus utuh) — akun seperti itu dibiarkan nonaktif. `deleteUser` di storage.js + konfirmasi sebelum hapus.

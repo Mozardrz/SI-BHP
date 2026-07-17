@@ -258,11 +258,6 @@ export const Login = ({ onLoginSuccess }) => {
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
-                {/* Helper info */}
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
-                  <span className="font-bold text-slate-800">Akun Master Admin Awal:</span>
-                  <p className="font-mono text-slate-700">Username: <span className="font-bold">admin</span> | Password: <span className="font-bold">admin123</span></p>
-                </div>
               </form>
             ) : mode === 'register' ? (
               /* REGISTER FORM */
