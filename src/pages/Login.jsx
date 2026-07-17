@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Toast } from '../components/common/Toast';
 import { ArrowRight, UserPlus, AlertCircle } from 'lucide-react';
 import gedungImg from '../assets/gedung.jpeg';
-import logoImg from '../assets/logo.png';
+import logoImg from '../assets/logo1.jpeg';
 
 export const Login = ({ onLoginSuccess }) => {
   const { loginWithCredentials, registerNewAccount } = useAuth();
@@ -13,8 +13,8 @@ export const Login = ({ onLoginSuccess }) => {
   // Login States
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('admin');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // Register States
   const [firstName, setFirstName] = useState('');
@@ -23,26 +23,30 @@ export const Login = ({ onLoginSuccess }) => {
   const [regPassword, setRegPassword] = useState('');
   const [regUserType, setRegUserType] = useState('mahasiswa');
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
     try {
-      loginWithCredentials(username || 'admin', password || 'admin123', role);
+      await loginWithCredentials(username, password);
       if (onLoginSuccess) onLoginSuccess();
     } catch (err) {
       setError(err.message || 'Gagal masuk. Periksa kembali username dan password.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
     try {
       if (!firstName.trim() || !lastName.trim() || !regUsername.trim() || !regPassword.trim()) {
         throw new Error("Semua field pendaftaran wajib diisi.");
       }
 
-      registerNewAccount({
+      await registerNewAccount({
         first_name: firstName,
         last_name: lastName,
         username: regUsername,
@@ -59,7 +63,6 @@ export const Login = ({ onLoginSuccess }) => {
       // AUTO REDIRECT BACK TO LOGIN TAB WITH PRE-FILLED USERNAME
       setUsername(regUsername);
       setPassword('');
-      setRole(regUserType === 'admin' ? 'admin' : 'user');
       setIsRegisterMode(false);
 
       // Reset reg form
@@ -69,6 +72,8 @@ export const Login = ({ onLoginSuccess }) => {
       setRegPassword('');
     } catch (err) {
       setError(err.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -86,13 +91,10 @@ export const Login = ({ onLoginSuccess }) => {
             <img src={gedungImg} alt="Politeknik Negeri Bengkalis" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
             <div className="absolute bottom-0 left-0 p-8 space-y-1">
-              <p className="text-xs font-bold uppercase tracking-widest text-lime-400">Selamat Datang</p>
-              <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight">
-                Sistem Informasi Inventaris BHP<br />Politeknik Negeri Bengkalis
-              </h1>
-              <p className="text-slate-200 text-xs pt-1.5">
-                Laboratorium & Bengkel Kerja • Jurusan Teknik Mesin
-              </p>
+              <h1 className="text-4xl font-black text-white leading-tight tracking-tight">SI-BHP</h1>
+              <p className="text-slate-100 text-sm font-semibold">(Sistem Informasi Bahan Habis Pakai)</p>
+              <p className="text-white text-xl font-bold pt-1">Jurusan Teknik Mesin</p>
+              <p className="text-slate-300 text-xs">Politeknik Negeri Bengkalis</p>
             </div>
           </div>
         </div>
@@ -181,25 +183,12 @@ export const Login = ({ onLoginSuccess }) => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Peran (Role) *
-                  </label>
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  >
-                    <option value="admin">Admin (Teknisi / Pengelola Lab)</option>
-                    <option value="user">User (Mahasiswa / Dosen)</option>
-                  </select>
-                </div>
-
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-polbeng-blue hover:bg-slate-900 text-white font-bold text-xs transition-all shadow-md shadow-polbeng-blue/20"
+                  disabled={submitting}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-polbeng-blue hover:bg-slate-900 text-white font-bold text-xs transition-all shadow-md shadow-polbeng-blue/20 disabled:opacity-60"
                 >
-                  <span>Masuk Aplikasi SI-BHP</span>
+                  <span>{submitting ? 'Memproses...' : 'Masuk Aplikasi SI-BHP'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -280,17 +269,18 @@ export const Login = ({ onLoginSuccess }) => {
                     className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                   >
                     <option value="mahasiswa">Mahasiswa</option>
-                    <option value="dosen">Dosen</option>
+                    <option value="dosen">Dosen/Tendik</option>
                     <option value="admin">Admin / Teknisi Lab</option>
                   </select>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition-all shadow-md shadow-teal-600/20"
+                  disabled={submitting}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition-all shadow-md shadow-teal-600/20 disabled:opacity-60"
                 >
                   <UserPlus className="w-4 h-4" />
-                  <span>Daftarkan Akun</span>
+                  <span>{submitting ? 'Memproses...' : 'Daftarkan Akun'}</span>
                 </button>
               </form>
             )}

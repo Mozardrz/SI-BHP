@@ -27,6 +27,9 @@ pnpm-debug.log*
 # System logs
 *.log
 
+# Environment (kunci koneksi Supabase — jangan ikut ke GitHub)
+.env
+
 # Netlify
 .netlify
 

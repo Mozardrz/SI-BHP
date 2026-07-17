@@ -29,9 +29,14 @@ export const Dashboard = ({ onNavigate }) => {
   const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
-    setMaterials(getMaterials());
-    setRequests(getRequests());
-    setTransactions(getTransactions());
+    (async () => {
+      try {
+        const [mats, reqs, txs] = await Promise.all([getMaterials(), getRequests(), getTransactions()]);
+        setMaterials(mats);
+        setRequests(reqs);
+        setTransactions(txs);
+      } catch (e) { console.error(e); }
+    })();
   }, []);
 
   const criticalItems = materials.filter(m => m.stock <= m.min_stock);

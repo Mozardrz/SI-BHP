@@ -68,12 +68,15 @@ export const Materials = () => {
 
   const [toast, setToast] = useState(null);
 
-  const loadData = () => {
-    const mats = getMaterials();
-    const crs = getCourses();
-    setMaterials(mats);
-    setCoursesList(crs);
-    setLabsList(getLabs());
+  const loadData = async () => {
+    try {
+      const [mats, crs, labs] = await Promise.all([getMaterials(), getCourses(), getLabs()]);
+      setMaterials(mats);
+      setCoursesList(crs);
+      setLabsList(labs);
+    } catch (e) {
+      setToast({ type: 'error', message: e.message });
+    }
   };
 
   useEffect(() => {
@@ -143,11 +146,11 @@ export const Materials = () => {
     setIsRestockOpen(true);
   };
 
-  const handleSaveMaterial = (e) => {
+  const handleSaveMaterial = async (e) => {
     e.preventDefault();
     try {
       if (!formData.material_name.trim()) throw new Error("Nama bahan tidak boleh kosong.");
-      saveMaterial({
+      await saveMaterial({
         ...(selectedMaterial ? { id: selectedMaterial.id, no: selectedMaterial.no } : {}),
         ...formData
       });
@@ -159,10 +162,10 @@ export const Materials = () => {
     }
   };
 
-  const handleSaveRestock = (e) => {
+  const handleSaveRestock = async (e) => {
     e.preventDefault();
     try {
-      recordIncomingStock({
+      await recordIncomingStock({
         material_id: selectedMaterial.id,
         quantity: restockData.quantity,
         recorded_by: currentUser.id,
@@ -176,10 +179,10 @@ export const Materials = () => {
     }
   };
 
-  const handleDelete = (material) => {
+  const handleDelete = async (material) => {
     if (confirm(`Apakah Anda yakin ingin menghapus data master bahan: "${material.material_name}"?`)) {
       try {
-        deleteMaterial(material.id);
+        await deleteMaterial(material.id);
         setToast({ type: 'info', message: `Material ${material.material_name} telah dihapus.` });
         loadData();
       } catch (err) {

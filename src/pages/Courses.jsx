@@ -28,10 +28,15 @@ export const Courses = () => {
 
   const [toast, setToast] = useState(null);
 
-  const loadData = () => {
-    setCoursesList(getCourses());
-    setMaterials(getMaterials());
-    setLabs(getLabs());
+  const loadData = async () => {
+    try {
+      const [crs, mats, lbs] = await Promise.all([getCourses(), getMaterials(), getLabs()]);
+      setCoursesList(crs);
+      setMaterials(mats);
+      setLabs(lbs);
+    } catch (e) {
+      setToast({ type: 'error', message: e.message });
+    }
   };
 
   useEffect(() => {
@@ -68,11 +73,11 @@ export const Courses = () => {
     setIsOpenModal(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     try {
       if (!formData.course_name.trim()) throw new Error("Nama mata kuliah wajib diisi.");
-      saveCourse({
+      await saveCourse({
         ...(selectedCourse ? { id: selectedCourse.id } : {}),
         ...formData
       });
@@ -84,7 +89,7 @@ export const Courses = () => {
     }
   };
 
-  const handleDelete = (course) => {
+  const handleDelete = async (course) => {
     const linkedCount = materials.filter(m => m.course_id === course.id).length;
     if (linkedCount > 0) {
       setToast({ type: 'warning', message: `Tidak dapat menghapus "${course.course_name}" karena terikat pada ${linkedCount} jenis bahan BHP.` });
@@ -92,9 +97,13 @@ export const Courses = () => {
     }
 
     if (confirm(`Apakah Anda yakin ingin menghapus data mata kuliah: "${course.course_name}"?`)) {
-      deleteCourse(course.id);
-      setToast({ type: 'info', message: `Mata kuliah "${course.course_name}" telah dihapus.` });
-      loadData();
+      try {
+        await deleteCourse(course.id);
+        setToast({ type: 'info', message: `Mata kuliah "${course.course_name}" telah dihapus.` });
+        loadData();
+      } catch (err) {
+        setToast({ type: 'error', message: err.message });
+      }
     }
   };
 

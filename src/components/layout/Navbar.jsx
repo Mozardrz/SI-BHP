@@ -1,19 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Moon, Sun, Bell, LogOut, User, Shield, Layers, AlertTriangle, CheckCircle } from 'lucide-react';
 import { getMaterials, getRequests } from '../../utils/storage';
-import logoImg from '../../assets/logo.png';
+import logoImg from '../../assets/logo1.jpeg';
 
 export const Navbar = ({ onNavigate, currentPage }) => {
   const { currentUser, logout, darkMode, toggleDarkMode, isAdmin } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [criticalItems, setCriticalItems] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
 
-  // Live indicators calculation
-  const materials = getMaterials();
-  const requests = getRequests();
-  const criticalItems = materials.filter(m => m.stock <= m.min_stock);
-  const pendingRequests = requests.filter(r => r.status === 'pending');
+  // Refresh indikator notifikasi setiap pindah halaman
+  useEffect(() => {
+    (async () => {
+      try {
+        const [materials, requests] = await Promise.all([getMaterials(), getRequests()]);
+        setCriticalItems(materials.filter(m => m.stock <= m.min_stock));
+        setPendingRequests(requests.filter(r => r.status === 'pending'));
+      } catch (e) { /* koneksi gagal: biarkan kosong */ }
+    })();
+  }, [currentPage]);
+
   const notificationCount = criticalItems.length + (isAdmin ? pendingRequests.length : 0);
 
   return (
@@ -49,7 +57,7 @@ export const Navbar = ({ onNavigate, currentPage }) => {
           {/* Active Role Indicator Badge */}
           <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200">
             <Shield className={`w-3.5 h-3.5 ${isAdmin ? 'text-amber-500' : 'text-teal-500'}`} />
-            <span>Role: {isAdmin ? 'Admin (Teknisi Lab)' : 'User (Mahasiswa/Dosen)'}</span>
+            <span>Role: {isAdmin ? 'Admin (Teknisi Lab)' : 'User (Mahasiswa/Dosen/Tendik)'}</span>
           </div>
 
           {/* Dark Mode Switcher */}

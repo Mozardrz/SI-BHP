@@ -22,10 +22,15 @@ export const Labs = () => {
 
   const [toast, setToast] = useState(null);
 
-  const loadData = () => {
-    setLabsList(getLabs());
-    setMaterials(getMaterials());
-    setCourses(getCourses());
+  const loadData = async () => {
+    try {
+      const [labs, mats, crs] = await Promise.all([getLabs(), getMaterials(), getCourses()]);
+      setLabsList(labs);
+      setMaterials(mats);
+      setCourses(crs);
+    } catch (e) {
+      setToast({ type: 'error', message: e.message });
+    }
   };
 
   useEffect(() => {
@@ -48,10 +53,10 @@ export const Labs = () => {
     setIsOpenModal(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     try {
-      saveLab({
+      await saveLab({
         ...(selectedLab ? { id: selectedLab.id } : {}),
         ...formData
       });
@@ -63,16 +68,20 @@ export const Labs = () => {
     }
   };
 
-  const handleDelete = (lab) => {
+  const handleDelete = async (lab) => {
     const linked = materials.filter(m => m.lab_id === lab.id).length + courses.filter(c => c.lab_id === lab.id).length;
     if (linked > 0) {
       setToast({ type: 'warning', message: `Tidak dapat menghapus "${lab.lab_name}" karena masih terikat pada ${linked} data mata kuliah/bahan.` });
       return;
     }
     if (confirm(`Hapus data laboratorium: "${lab.lab_name}"?`)) {
-      deleteLab(lab.id);
-      setToast({ type: 'info', message: `Laboratorium "${lab.lab_name}" telah dihapus.` });
-      loadData();
+      try {
+        await deleteLab(lab.id);
+        setToast({ type: 'info', message: `Laboratorium "${lab.lab_name}" telah dihapus.` });
+        loadData();
+      } catch (err) {
+        setToast({ type: 'error', message: err.message });
+      }
     }
   };
 

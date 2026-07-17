@@ -41,17 +41,21 @@ export const Profile = () => {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
-  const handleSaveName = (e) => {
+  const handleSaveName = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
       setToast({ type: 'error', message: 'Nama tidak boleh kosong.' });
       return;
     }
-    updateProfile({ name: name.trim() });
-    setToast({ type: 'success', message: 'Nama profil berhasil diperbarui.' });
+    try {
+      await updateProfile({ name: name.trim() });
+      setToast({ type: 'success', message: 'Nama profil berhasil diperbarui.' });
+    } catch (err) {
+      setToast({ type: 'error', message: err.message });
+    }
   };
 
-  const handleChangePassword = (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       setToast({ type: 'error', message: 'Konfirmasi kata sandi baru tidak cocok.' });
@@ -62,7 +66,7 @@ export const Profile = () => {
       return;
     }
     try {
-      changePassword(oldPassword, newPassword);
+      await changePassword(oldPassword, newPassword);
       setToast({ type: 'success', message: 'Kata sandi berhasil diperbarui.' });
       setOldPassword('');
       setNewPassword('');
@@ -77,7 +81,7 @@ export const Profile = () => {
     if (!file) return;
     try {
       const avatar = await fileToAvatar(file);
-      updateProfile({ avatar });
+      await updateProfile({ avatar });
       setToast({ type: 'success', message: 'Foto profil berhasil diperbarui.' });
     } catch {
       setToast({ type: 'error', message: 'Gagal memproses gambar yang dipilih.' });
@@ -126,8 +130,12 @@ export const Profile = () => {
     const sy = (video.videoHeight - side) / 2;
     ctx.drawImage(video, sx, sy, side, side, 0, 0, size, size);
     const avatar = canvas.toDataURL('image/jpeg', 0.82);
-    updateProfile({ avatar });
-    setToast({ type: 'success', message: 'Foto profil dari kamera berhasil disimpan.' });
+    try {
+      await updateProfile({ avatar });
+      setToast({ type: 'success', message: 'Foto profil dari kamera berhasil disimpan.' });
+    } catch (err) {
+      setToast({ type: 'error', message: err.message });
+    }
     closeCamera();
   };
 
@@ -136,9 +144,13 @@ export const Profile = () => {
     setIsCameraOpen(false);
   };
 
-  const removeAvatar = () => {
-    updateProfile({ avatar: '' });
-    setToast({ type: 'info', message: 'Foto profil dihapus, kembali ke inisial.' });
+  const removeAvatar = async () => {
+    try {
+      await updateProfile({ avatar: '' });
+      setToast({ type: 'info', message: 'Foto profil dihapus, kembali ke inisial.' });
+    } catch (err) {
+      setToast({ type: 'error', message: err.message });
+    }
   };
 
   return (

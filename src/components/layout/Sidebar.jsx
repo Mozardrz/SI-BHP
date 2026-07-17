@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard,
@@ -8,19 +8,25 @@ import {
   FileSpreadsheet,
   AlertTriangle,
   History,
-  Users,
-  UserCheck,
-  RefreshCw
+  Users
 } from 'lucide-react';
-import { getMaterials, getRequests, resetDBToDefault } from '../../utils/storage';
+import { getMaterials, getRequests } from '../../utils/storage';
 
 export const Sidebar = ({ currentPage, onNavigate }) => {
   const { isAdmin } = useAuth();
+  const [criticalCount, setCriticalCount] = useState(0);
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
 
-  const materials = getMaterials();
-  const requests = getRequests();
-  const criticalCount = materials.filter(m => m.stock <= m.min_stock).length;
-  const pendingRequestCount = requests.filter(r => r.status === 'pending').length;
+  // Refresh badge counts setiap pindah halaman
+  useEffect(() => {
+    (async () => {
+      try {
+        const [materials, requests] = await Promise.all([getMaterials(), getRequests()]);
+        setCriticalCount(materials.filter(m => m.stock <= m.min_stock).length);
+        setPendingRequestCount(requests.filter(r => r.status === 'pending').length);
+      } catch (e) { /* koneksi gagal: biarkan badge kosong */ }
+    })();
+  }, [currentPage]);
 
   const menuItems = [
     {
@@ -118,27 +124,6 @@ export const Sidebar = ({ currentPage, onNavigate }) => {
           </nav>
         </div>
 
-        {/* Demo Tools Widget */}
-        <div className="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
-          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 text-xs font-bold">
-            <UserCheck className="w-4 h-4 text-teal-500" />
-            <span>Mode Demo SI-BHP</span>
-          </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-            Sistem pra-isi dengan data Laboratorium Bengkel Kerja Polbeng.
-          </p>
-          <button
-            onClick={() => {
-              if (confirm("Reset ulang database ke kondisi awal? Semua data akan dikosongkan.")) {
-                resetDBToDefault();
-              }
-            }}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Reset Data Bawaan</span>
-          </button>
-        </div>
       </div>
 
       <div className="pt-4 border-t border-slate-200 dark:border-slate-800 text-center">

@@ -8,7 +8,7 @@ import { getUsers, saveUser, toggleUserStatus } from '../utils/storage';
 import { formatDate } from '../utils/formatters';
 
 export const UserManagement = () => {
-  const { refreshUsersList, currentUser } = useAuth();
+  const { currentUser } = useAuth();
   const [usersList, setUsersList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const emptyForm = { name: '', username: '', password: '', email: '', user_type: 'mahasiswa' };
@@ -16,29 +16,23 @@ export const UserManagement = () => {
 
   const [toast, setToast] = useState(null);
 
-  const loadData = () => {
-    const list = getUsers();
-    setUsersList(list);
-    refreshUsersList();
+  const loadData = async () => {
+    setUsersList(await getUsers());
   };
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const handleCreateUser = (e) => {
+  const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
       if (!formData.name.trim() || !formData.username.trim() || !formData.password.trim()) {
         throw new Error("Nama, username, dan password wajib diisi.");
       }
-      const cleanUsername = formData.username.trim().toLowerCase();
-      if (getUsers().some(u => u.username?.toLowerCase() === cleanUsername)) {
-        throw new Error("Username ini sudah digunakan. Pilih username lain.");
-      }
-      // mahasiswa & dosen -> role user; admin/teknisi -> role admin
+      // mahasiswa & dosen/tendik -> role user; admin/teknisi -> role admin
       const role = formData.user_type === 'admin' ? 'admin' : 'user';
-      saveUser({ ...formData, username: cleanUsername, role });
+      await saveUser({ ...formData, username: formData.username.trim().toLowerCase(), role });
       setToast({ type: 'success', message: `Pengguna baru "${formData.name}" berhasil ditambahkan.` });
       setIsModalOpen(false);
       setFormData(emptyForm);
@@ -48,14 +42,18 @@ export const UserManagement = () => {
     }
   };
 
-  const handleToggleActive = (usr) => {
+  const handleToggleActive = async (usr) => {
     if (usr.id === currentUser.id) {
       setToast({ type: 'warning', message: "Anda tidak dapat menonaktifkan akun sendiri yang sedang aktif." });
       return;
     }
-    toggleUserStatus(usr.id);
-    setToast({ type: 'info', message: `Status akun ${usr.name} berhasil diperbarui.` });
-    loadData();
+    try {
+      await toggleUserStatus(usr.id);
+      setToast({ type: 'info', message: `Status akun ${usr.name} berhasil diperbarui.` });
+      loadData();
+    } catch (err) {
+      setToast({ type: 'error', message: err.message });
+    }
   };
 
   return (
@@ -233,7 +231,7 @@ export const UserManagement = () => {
               className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
             >
               <option value="mahasiswa">Mahasiswa</option>
-              <option value="dosen">Dosen</option>
+              <option value="dosen">Dosen/Tendik</option>
               <option value="admin">Admin / Teknisi Lab</option>
             </select>
           </div>

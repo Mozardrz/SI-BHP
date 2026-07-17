@@ -21,9 +21,14 @@ export const LowStock = () => {
   const [restockNote, setRestockNote] = useState('Restock darurat barang kritis');
   const [toast, setToast] = useState(null);
 
-  const loadData = () => {
-    setMaterials(getMaterials());
-    setCoursesList(getCourses());
+  const loadData = async () => {
+    try {
+      const [mats, crs] = await Promise.all([getMaterials(), getCourses()]);
+      setMaterials(mats);
+      setCoursesList(crs);
+    } catch (e) {
+      setToast({ type: 'error', message: e.message });
+    }
   };
 
   useEffect(() => {
@@ -41,10 +46,10 @@ export const LowStock = () => {
     setIsRestockOpen(true);
   };
 
-  const handleSaveRestock = (e) => {
+  const handleSaveRestock = async (e) => {
     e.preventDefault();
     try {
-      recordIncomingStock({
+      await recordIncomingStock({
         material_id: selectedMaterial.id,
         quantity: restockQty,
         recorded_by: currentUser.id,

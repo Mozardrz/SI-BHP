@@ -40,8 +40,13 @@ export const UsageRequests = () => {
   // Print letter state
   const [isPrintOpen, setIsPrintOpen] = useState(false);
   const [printReq, setPrintReq] = useState(null);
+  const PRODI_OPTIONS = [
+    'D3-Teknik Elektronika',
+    'D3-Teknik Mesin',
+    'D4-Teknik Mesin Produksi dan Perawatan'
+  ];
   const [printData, setPrintData] = useState({
-    name: '', type: 'mahasiswa', nim: '', kelas: '', nip: '', lab_id: ''
+    name: '', type: 'mahasiswa', nim: '', prodi: 'D3-Teknik Elektronika', kelas: '', nip: '', lab_id: ''
   });
 
   // Delete / Cancel (with reason) state
@@ -68,24 +73,27 @@ export const UsageRequests = () => {
 
   const [toast, setToast] = useState(null);
 
-  const loadData = () => {
-    const reqs = getRequests();
-    const mats = getMaterials();
-    const crs = getCourses();
-    const usrs = getUsers();
-    setRequests(reqs);
-    setMaterials(mats);
-    setCoursesList(crs);
-    setLabsList(getLabs());
-    setUsers(usrs);
+  const loadData = async () => {
+    try {
+      const [reqs, mats, crs, labs, usrs] = await Promise.all([
+        getRequests(), getMaterials(), getCourses(), getLabs(), getUsers()
+      ]);
+      setRequests(reqs);
+      setMaterials(mats);
+      setCoursesList(crs);
+      setLabsList(labs);
+      setUsers(usrs);
 
-    if (mats.length > 0 && !formData.material_id) {
-      setFormData(prev => ({
-        ...prev,
-        material_id: mats[0].id,
-        semester: mats[0].semester,
-        practical_hours: mats[0].practical_hours
-      }));
+      if (mats.length > 0 && !formData.material_id) {
+        setFormData(prev => ({
+          ...prev,
+          material_id: mats[0].id,
+          semester: mats[0].semester,
+          practical_hours: mats[0].practical_hours
+        }));
+      }
+    } catch (e) {
+      setToast({ type: 'error', message: e.message });
     }
   };
 
@@ -111,10 +119,10 @@ export const UsageRequests = () => {
     }));
   };
 
-  const handleCreateSubmit = (e) => {
+  const handleCreateSubmit = async (e) => {
     e.preventDefault();
     try {
-      createUsageRequest({
+      await createUsageRequest({
         ...formData,
         user_id: currentUser.id
       });
@@ -133,18 +141,18 @@ export const UsageRequests = () => {
     setIsProcessModalOpen(true);
   };
 
-  const handleProcessSubmit = (e) => {
+  const handleProcessSubmit = async (e) => {
     e.preventDefault();
     try {
       if (processAction === 'approve') {
-        approveUsageRequest({
+        await approveUsageRequest({
           requestId: selectedReq.id,
           adminId: currentUser.id,
           adminNote
         });
         setToast({ type: 'success', message: `Permohonan ID: ${selectedReq.id} BERHASIL DISETUJUI. Sisa stok berkurang otomatis.` });
       } else {
-        rejectUsageRequest({
+        await rejectUsageRequest({
           requestId: selectedReq.id,
           adminId: currentUser.id,
           adminNote
@@ -166,6 +174,7 @@ export const UsageRequests = () => {
       name: userMap.get(req.user_id) || '',
       type: reqUser?.user_type === 'dosen' ? 'dosen' : 'mahasiswa',
       nim: '',
+      prodi: 'D3-Teknik Elektronika',
       kelas: '',
       nip: '',
       lab_id: mat?.lab_id || labsList[0]?.id || ''
@@ -203,14 +212,14 @@ export const UsageRequests = () => {
     setIsReasonOpen(true);
   };
 
-  const handleReasonSubmit = (e) => {
+  const handleReasonSubmit = async (e) => {
     e.preventDefault();
     try {
       if (reasonAction === 'cancel') {
-        cancelApprovedRequest({ requestId: reasonReq.id, adminId: currentUser.id, reason: reasonText });
+        await cancelApprovedRequest({ requestId: reasonReq.id, adminId: currentUser.id, reason: reasonText });
         setToast({ type: 'info', message: 'Permohonan dibatalkan & stok dikembalikan. Tercatat di Riwayat Audit.' });
       } else {
-        deleteUsageRequest({ requestId: reasonReq.id, adminId: currentUser.id, reason: reasonText });
+        await deleteUsageRequest({ requestId: reasonReq.id, adminId: currentUser.id, reason: reasonText });
         setToast({ type: 'info', message: 'Permohonan dihapus. Tercatat di Riwayat Audit.' });
       }
       setIsReasonOpen(false);
@@ -633,11 +642,26 @@ export const UsageRequests = () => {
               className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
             >
               <option value="mahasiswa">Mahasiswa</option>
-              <option value="dosen">Dosen</option>
+              <option value="dosen">Dosen/Tendik</option>
             </select>
           </div>
 
           {printData.type === 'mahasiswa' && (
+            <>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Program Studi *
+              </label>
+              <select
+                value={printData.prodi}
+                onChange={(e) => setPrintData({ ...printData, prodi: e.target.value })}
+                className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
+              >
+                {PRODI_OPTIONS.map(p => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -660,11 +684,12 @@ export const UsageRequests = () => {
                   value={printData.kelas}
                   onChange={(e) => setPrintData({ ...printData, kelas: e.target.value })}
                   required
-                  placeholder="Contoh: 2A TM"
+                  placeholder="Contoh: 2A"
                   className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
                 />
               </div>
             </div>
+            </>
           )}
 
           <div>

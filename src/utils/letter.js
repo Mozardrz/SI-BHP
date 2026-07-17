@@ -17,7 +17,12 @@ export const openLetterPreview = ({ request, material, course, lab, applicant })
   const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
   const idRows = isMhs
-    ? [['Nama', applicant.name], ['NIM', applicant.nim], ['Kelas', applicant.kelas], ['Laboratorium', lab?.lab_name]]
+    ? [
+        ['Nama', applicant.name],
+        ['NIM', applicant.nim],
+        ['Prodi/Kelas', `${applicant.prodi || '-'} / ${applicant.kelas || '-'}`],
+        ['Laboratorium', lab?.lab_name]
+      ]
     : [['Nama', applicant.name], ['Laboratorium', lab?.lab_name]];
 
   const idRowsHtml = idRows
@@ -47,7 +52,6 @@ export const openLetterPreview = ({ request, material, course, lab, applicant })
   h1.title span { display: block; }
   h1.title span:first-child { text-decoration: underline; }
   h1.title span:last-child { text-decoration: underline; }
-  .nomor { text-align: center; margin: 0 0 12px; }
   p { margin: 3px 0; text-align: justify; }
   .idtable td { padding: 0 6px 0 0; vertical-align: top; }
   .idtable td:first-child { width: 130px; }
@@ -82,11 +86,10 @@ export const openLetterPreview = ({ request, material, course, lab, applicant })
     </div>
 
     <h1 class="title"><span>SURAT PERMOHONAN &amp; PEMAKAIAN</span><span>BAHAN HABIS PAKAI</span></h1>
-    <p class="nomor">Nomor : ......../...../......../20....</p>
 
-    <p style="text-align:left;margin-bottom:0;">Yth. Kepala Laboratorium ${esc(lab?.lab_name || '..........................')}</p>
-    <p style="text-align:left;margin:0;">Politeknik Negeri Bengkalis</p>
-    <p style="text-align:left;margin:0;">di Bengkalis</p>
+    <p style="text-align:left;margin:14px 0 0;">Kepada</p>
+    <p style="text-align:left;margin:0;">Kepala ${esc(lab?.lab_name || '..............................................')}</p>
+    <p style="text-align:left;margin:0;">Di Tempat</p>
 
     <p style="margin-top:10px;">Dengan hormat,</p>
     <p style="margin:0;">Yang bertanda tangan di bawah ini:</p>
@@ -125,7 +128,7 @@ export const openLetterPreview = ({ request, material, course, lab, applicant })
         </td>
         <td>
           <div>Mengetahui,</div>
-          <div>Kepala Laboratorium</div>
+          <div>Kepala ${esc(lab?.lab_name || 'Laboratorium')}</div>
           <div class="gap"></div>
           <div><b>( ${esc(lab?.head_name || '.....................................')} )</b></div>
           <div>NIP. ${esc(lab?.head_nip || '...............................')}</div>

@@ -21,9 +21,14 @@ export const History = () => {
   const [typeFilter, setTypeFilter] = useState('all');
 
   useEffect(() => {
-    setTransactions(getTransactions());
-    setMaterials(getMaterials());
-    setUsers(getUsers());
+    (async () => {
+      try {
+        const [txs, mats, usrs] = await Promise.all([getTransactions(), getMaterials(), getUsers()]);
+        setTransactions(txs);
+        setMaterials(mats);
+        setUsers(usrs);
+      } catch (e) { console.error(e); }
+    })();
   }, []);
 
   const matMap = new Map(materials.map(m => [m.id, m]));
