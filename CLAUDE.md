@@ -35,7 +35,9 @@ konsep teknis dengan bahasa sederhana, Bahasa Indonesia).
 - Permohonan: hapus hanya untuk pending/ditolak; yang disetujui pakai "Batalkan" (stok dikembalikan). Keduanya wajib alasan + tercatat di audit.
 - **KEPUTUSAN AUTH (final, 17 Jul 2026):** login custom berbasis tabel `users` (password hash SHA-256+salt), lupa-password = cocokkan username+email → langsung reset, TANPA kirim email/Supabase Auth. User sudah paham trade-off-nya dan menilai CUKUP untuk pemakaian internal jurusan — jangan tawarkan upgrade Supabase Auth lagi kecuali user sendiri yang minta.
 
-## Status Terkini (per 16 Juli 2026)
+## Status Terkini (per 17 Juli 2026)
+
+**LIVE di https://si-bhp.netlify.app** (auto-deploy dari GitHub `main`).
 
 Fitur selesai: dashboard, master BHP (+spesifikasi, +lab), 13 lab ter-seed, mata kuliah,
 permohonan + approve/tolak/batalkan/hapus (dengan audit), cetak surat mahasiswa & dosen
@@ -50,13 +52,14 @@ Nama-Laboratorium; TTD kiri Pemohon (Mahasiswa+NIM / Dosen tanpa NIP), TTD kanan
 
 ## Rencana Berikutnya (belum dikerjakan)
 
-1. **Tahap 2: Deploy ke Netlify** — user perlu daftar netlify.com (pakai akun GitHub),
-   lalu hubungkan repo; env var Supabase harus diisi di Netlify (`.env` tidak ikut repo).
-2. Deploy ke Netlify + hubungkan repo GitHub.
-3. Uji coba (pilot) di 1 lab → rilis se-jurusan.
-4. Ide tertunda: permohonan multi-bahan (template surat mendukung 5 baris), nomor surat otomatis (di-skip atas permintaan user), hapus file mati `src/pages/Equipment.jsx`.
+1. Uji coba (pilot) di 1 lab → rilis se-jurusan.
+3. Ide tertunda: permohonan multi-bahan (template surat mendukung 5 baris), nomor surat otomatis (di-skip atas permintaan user), hapus file mati `src/pages/Equipment.jsx`.
 
 ## Riwayat Update
+
+- 2026-07-17: **MENU MOBILE (HAMBURGER)** — sidebar tersembunyi di HP kini bisa dibuka lewat tombol garis-tiga di Navbar (drawer dari kiri + backdrop, menutup otomatis saat pilih menu / klik luar). File: App.jsx (state `sidebarOpen`), Navbar.jsx (tombol `md:hidden`), Sidebar.jsx (drawer `fixed` saat mobileOpen).
+
+- 2026-07-17: **DEPLOY NETLIFY SUKSES** — live di **https://si-bhp.netlify.app** (auto-deploy dari GitHub `main`, env var Supabase terpasang di Netlify). Persiapan: hapus folder `.netlify` sisa percobaan gagal, buat `netlify.toml` (build `npm run build`, publish `dist`, SPA redirect). Alur update selanjutnya: cukup git push → Netlify build otomatis. Belum diverifikasi login di URL live.
 
 - 2026-07-17: **AUTH DIPERKUAT** — password di-hash (SHA-256+salt, `src/utils/password.js`; akun lama plaintext auto-upgrade saat login), registrasi wajib email, fitur **Lupa Password** (username+email cocok → set password baru, tanpa kirim email — keputusan user), password minimal 8 karakter di semua form (+notif merah), Kelola Pengguna email wajib. Tes auth lulus. Commit "Migrate data layer to Supabase" + auth di-push ke GitHub.
 

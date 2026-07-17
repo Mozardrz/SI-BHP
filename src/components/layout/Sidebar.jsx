@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { getMaterials, getRequests } from '../../utils/storage';
 
-export const Sidebar = ({ currentPage, onNavigate }) => {
+export const Sidebar = ({ currentPage, onNavigate, mobileOpen = false, onClose = () => {} }) => {
   const { isAdmin } = useAuth();
   const [criticalCount, setCriticalCount] = useState(0);
   const [pendingRequestCount, setPendingRequestCount] = useState(0);
@@ -84,7 +84,16 @@ export const Sidebar = ({ currentPage, onNavigate }) => {
   ];
 
   return (
-    <aside className="w-64 flex-shrink-0 hidden md:block border-r border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md min-h-[calc(100vh-4rem)] p-4 flex flex-col justify-between">
+    <>
+      {/* Latar gelap di belakang drawer (HP) — klik untuk menutup */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={onClose} />
+      )}
+      <aside className={`w-64 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 backdrop-blur-md p-4 flex-col justify-between
+        ${mobileOpen
+          ? 'flex fixed inset-y-0 left-0 z-50 overflow-y-auto bg-white dark:bg-slate-900'
+          : 'hidden'}
+        md:flex md:static md:z-auto md:bg-white/50 md:dark:bg-slate-900/50 md:min-h-[calc(100vh-4rem)]`}>
       <div className="space-y-6">
         <div>
           <p className="px-3 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
@@ -102,7 +111,7 @@ export const Sidebar = ({ currentPage, onNavigate }) => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => onNavigate(item.id)}
+                  onClick={() => { onNavigate(item.id); onClose(); }}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-xs transition-all duration-200 ${
                     isActive
                       ? 'bg-polbeng-blue text-white shadow-md shadow-polbeng-blue/20 dark:bg-sky-600 dark:text-white'
@@ -134,6 +143,7 @@ export const Sidebar = ({ currentPage, onNavigate }) => {
           Politeknik Negeri Bengkalis
         </p>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 };

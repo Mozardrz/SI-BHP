@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Moon, Sun, Bell, LogOut, User, Shield, Layers, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Moon, Sun, Bell, LogOut, User, Shield, Layers, AlertTriangle, CheckCircle, Menu } from 'lucide-react';
 import { getMaterials, getRequests } from '../../utils/storage';
 import logoImg from '../../assets/logo1.jpeg';
 
-export const Navbar = ({ onNavigate, currentPage }) => {
+export const Navbar = ({ onNavigate, currentPage, onMenuClick }) => {
   const { currentUser, logout, darkMode, toggleDarkMode, isAdmin } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -30,7 +30,15 @@ export const Navbar = ({ onNavigate, currentPage }) => {
         
         {/* Brand Title & Polbeng Identity */}
         <div className="flex items-center gap-3">
-          <div 
+          {/* Tombol menu (hamburger) — hanya tampil di layar HP */}
+          <button
+            onClick={onMenuClick}
+            className="md:hidden p-2 -ml-1 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+            aria-label="Buka menu utama"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+          <div
             onClick={() => onNavigate('dashboard')}
             className="flex items-center gap-3 cursor-pointer group"
           >

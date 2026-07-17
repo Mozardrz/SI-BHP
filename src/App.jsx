@@ -17,6 +17,7 @@ import { Profile } from './pages/Profile';
 const AppContent = () => {
   const { currentUser, loading, isAdmin } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false); // drawer menu di layar HP
 
   if (loading) {
     return (
@@ -58,10 +59,15 @@ const AppContent = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors">
-      <Navbar onNavigate={setCurrentPage} currentPage={currentPage} />
-      
+      <Navbar onNavigate={setCurrentPage} currentPage={currentPage} onMenuClick={() => setSidebarOpen(true)} />
+
       <div className="flex-1 flex w-full">
-        <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
+        <Sidebar
+          currentPage={currentPage}
+          onNavigate={setCurrentPage}
+          mobileOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
         
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full overflow-hidden">
           {renderPage()}
