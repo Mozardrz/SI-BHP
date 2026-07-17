@@ -3,8 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/common/Button';
 import { Modal } from '../components/common/Modal';
 import { Toast } from '../components/common/Toast';
-import { Users, Plus, Shield, User, Power, Mail, Calendar } from 'lucide-react';
-import { getUsers, saveUser, toggleUserStatus } from '../utils/storage';
+import { Users, Plus, Shield, User, Power, Mail, Calendar, Trash2 } from 'lucide-react';
+import { getUsers, saveUser, toggleUserStatus, deleteUser } from '../utils/storage';
 import { formatDate } from '../utils/formatters';
 
 export const UserManagement = () => {
@@ -39,6 +39,17 @@ export const UserManagement = () => {
       setToast({ type: 'success', message: `Pengguna baru "${formData.name}" berhasil ditambahkan.` });
       setIsModalOpen(false);
       setFormData(emptyForm);
+      loadData();
+    } catch (err) {
+      setToast({ type: 'error', message: err.message });
+    }
+  };
+
+  const handleDeleteUser = async (usr) => {
+    if (!window.confirm(`Hapus permanen akun "${usr.name}" (${usr.username})? Tindakan ini tidak bisa dibatalkan.`)) return;
+    try {
+      await deleteUser(usr.id);
+      setToast({ type: 'success', message: `Akun ${usr.name} berhasil dihapus permanen.` });
       loadData();
     } catch (err) {
       setToast({ type: 'error', message: err.message });
@@ -152,6 +163,15 @@ export const UserManagement = () => {
                     >
                       <Power className="w-4 h-4" />
                     </button>
+                    {!usr.is_active && (
+                      <button
+                        onClick={() => handleDeleteUser(usr)}
+                        className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950 transition-colors ml-1"
+                        title="Hapus Akun Permanen"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

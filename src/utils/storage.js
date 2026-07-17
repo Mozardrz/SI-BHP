@@ -336,3 +336,19 @@ export const toggleUserStatus = async (userId) => {
   const { error } = await supabase.from('users').update({ is_active: !usr.is_active }).eq('id', userId);
   throwIf(error);
 };
+
+// Hapus permanen akun nonaktif. Ditolak jika akun punya jejak di riwayat
+// (permohonan / transaksi) — jejak audit harus tetap utuh (konvensi proyek).
+export const deleteUser = async (userId) => {
+  const { count: reqCount, error: e1 } = await supabase
+    .from('requests').select('id', { count: 'exact', head: true }).eq('user_id', userId);
+  throwIf(e1);
+  const { count: trxCount, error: e2 } = await supabase
+    .from('transactions').select('id', { count: 'exact', head: true }).eq('recorded_by', userId);
+  throwIf(e2);
+  if ((reqCount || 0) + (trxCount || 0) > 0) {
+    throw new Error("Akun ini memiliki riwayat permohonan/transaksi sehingga tidak dapat dihapus permanen (jejak audit harus utuh). Biarkan berstatus Nonaktif.");
+  }
+  const { error } = await supabase.from('users').delete().eq('id', userId);
+  throwIf(error);
+};

@@ -57,6 +57,8 @@ Nama-Laboratorium; TTD kiri Pemohon (Mahasiswa+NIM / Dosen tanpa NIP), TTD kanan
 
 ## Riwayat Update
 
+- 2026-07-17: **HAPUS AKUN NONAKTIF** — Kelola Pengguna: tombol hapus permanen (ikon tempat sampah) muncul hanya pada akun berstatus Nonaktif; ditolak jika akun punya riwayat permohonan/transaksi (jejak audit harus utuh) — akun seperti itu dibiarkan nonaktif. `deleteUser` di storage.js + konfirmasi sebelum hapus.
+
 - 2026-07-17: **MENU MOBILE (HAMBURGER)** — sidebar tersembunyi di HP kini bisa dibuka lewat tombol garis-tiga di Navbar (drawer dari kiri + backdrop, menutup otomatis saat pilih menu / klik luar). File: App.jsx (state `sidebarOpen`), Navbar.jsx (tombol `md:hidden`), Sidebar.jsx (drawer `fixed` saat mobileOpen).
 
 - 2026-07-17: **DEPLOY NETLIFY SUKSES** — live di **https://si-bhp.netlify.app** (auto-deploy dari GitHub `main`, env var Supabase terpasang di Netlify). Persiapan: hapus folder `.netlify` sisa percobaan gagal, buat `netlify.toml` (build `npm run build`, publish `dist`, SPA redirect). Alur update selanjutnya: cukup git push → Netlify build otomatis. Belum diverifikasi login di URL live.
